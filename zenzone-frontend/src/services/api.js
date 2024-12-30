@@ -206,22 +206,35 @@ export const API = {
     },
 
     // Analytics
-    getJournalAnalytics: async (token, timeframe = 'weekly') => {
-        try {
-            const response = await fetch(`${BASE_URL}/journal/entries/analytics/?timeframe=${timeframe}`, {
+   getJournalAnalytics: async (token, timeframe = 'weekly') => {
+    try {
+        console.log('Fetching analytics with timeframe:', timeframe);
+        console.log('Using token:', token ? 'Token exists' : 'No token');
+        
+        const response = await fetch(
+            `${BASE_URL}/journal/entries/analytics/?timeframe=${timeframe}`,
+            {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
                 }
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to fetch analytics');
             }
-            
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching journal analytics:', error);
-            throw error;
+        );
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Error data:', errorData);
+            throw new Error(`Failed to fetch analytics: ${response.status}`);
         }
+        
+        const data = await response.json();
+        console.log('Analytics data received:', data);
+        return data;
+    } catch (error) {
+        console.error('Detailed error:', error);
+        throw error;
     }
+}
 };

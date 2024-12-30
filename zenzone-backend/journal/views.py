@@ -10,6 +10,9 @@ from django.contrib.auth import authenticate
 from authentication.serializers import UserSerializer  
 from rest_framework.permissions import IsAuthenticated
 from journal_sentiment.model_loader import SentimentAnalyzer
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from . import analytics
 
 # Initialize sentiment analyzer
 sentiment_analyzer = SentimentAnalyzer()
@@ -32,3 +35,23 @@ class JournalEntryViewSet(viewsets.ModelViewSet):
         content = serializer.validated_data.get('content', '')
         sentiment = sentiment_analyzer.predict_sentiment(content)
         serializer.save(sentiment=sentiment)
+
+    @action(detail=False, methods=['get'])
+    def analytics(self, request):
+        timeframe = request.query_params.get('timeframe', 'weekly')
+        
+        if timeframe not in ['daily', 'weekly', 'monthly']:
+            return Response({'error': 'Invalid timeframe'}, status=400)
+        
+        data = {
+            'sentiment_summary': analytics.get_sentiment_summary(request.user, timeframe),
+            'sentiment_trends': analytics.get_sentiment_trends(request.user, timeframe),
+            'mood_analysis': analytics.get_mood_analysis(request.user, timeframe),
+            'timeframe': timeframe
+        }
+        
+        return Response(data)
+
+    
+        
+        

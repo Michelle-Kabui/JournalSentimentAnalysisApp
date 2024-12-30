@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,83 +6,167 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
-  Dimensions,
+  ActivityIndicator,
+  Alert,
+  Dimensions
 } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LineChart } from 'react-native-chart-kit';
+import { API } from '../../services/api';
+import { TokenStorage } from '../../utils/tokenStorage';
 
 const JournalAnalyticsScreen = ({ navigation }) => {
-  const [timeframe, setTimeframe] = useState('weekly'); // 'weekly' or 'monthly'
+  const [timeframe, setTimeframe] = useState('daily');
+  const [analytics, setAnalytics] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Dummy data for weekly sentiment trends
-  const weeklyData = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    datasets: [
-      {
-        data: [
-          0.8,  // Positive
-          0.2,  // Negative
-          0.5,  // Neutral
-          0.9,  // Positive
-          0.3,  // Negative
-          0.7,  // Positive
-          0.4   // Neutral
-        ],
-        color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`
+  useEffect(() => {
+    fetchAnalytics();
+  }, [timeframe]);
+
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true);
+      const token = await TokenStorage.getAccessToken();
+      if (!token) {
+        navigation.replace('Login');
+        return;
       }
-    ]
-  };
-
-  // Dummy data for monthly sentiment trends
-  const monthlyData = {
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-    datasets: [
-      {
-        data: [0.7, 0.5, 0.8, 0.6],
-        color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`
-      }
-    ]
-  };
-
-  const screenWidth = Dimensions.get('window').width;
-
-  const chartConfig = {
-    backgroundGradient: '#ffffff',
-    backgroundGradientFrom: '#ffffff',
-    backgroundGradientTo: '#ffffff',
-    color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-    strokeWidth: 2,
-    barPercentage: 0.5,
-    useShadowColorFromDataset: false,
-    decimalPlaces: 1,
-  };
-
-  const navigationItems = [
-    { 
-      icon: ({color, size}) => <Feather name="home" size={size} color={color} />,
-      label: 'Home',
-      route: 'Home',
-      onPress: () => navigation.navigate('Home')
-    },
-    { 
-      icon: ({color, size}) => <Feather name="edit" size={size} color={color} />,
-      label: 'Journal',
-      route: 'Journal',
-      onPress: () => navigation.navigate('Journal')
-    },
-    { 
-      icon: ({color, size}) => <MaterialCommunityIcons name="book-open-variant" size={size} color={color} />,
-      label: 'Assessment',
-      route: 'Assessment',
-      onPress: () => navigation.navigate('Assessment')
-    },
-    { 
-      icon: ({color, size}) => <Feather name="user" size={size} color={color} />,
-      label: 'Profile',
-      route: 'Profile',
-      onPress: () => navigation.navigate('Profile')
+      const response = await API.getJournalAnalytics(token, timeframe);
+      setAnalytics(response);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      Alert.alert('Error', 'Failed to load analytics');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const prepareChartData = () => {
+    if (!analytics?.sentiment_trends) return null;
+  
+    const labels = Object.keys(analytics.sentiment_trends);
+    const datasets = [
+      {
+        data: labels.map(label => analytics.sentiment_trends[label].positive),
+        color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+        label: 'Positive'
+      },
+      {
+        data: labels.map(label => analytics.sentiment_trends[label].neutral),
+        color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`,
+        label: 'Neutral'
+      },
+      {
+        data: labels.map(label => analytics.sentiment_trends[label].negative),
+        color: (opacity = 1) => `rgba(244, 67, 54, ${opacity})`,
+        label: 'Negative'
+      }
+    ];
+  
+    // Format labels based on timeframe
+    const formattedLabels = labels.map(label => {
+      if (timeframe === 'daily') {
+        // Convert 24-hour format to 12-hour format with AM/PM
+        const hour = parseInt(label.split(':')[0]);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:00 ${ampm}`;
+      } else if (timeframe === 'weekly') {
+        // Format as "Mon, Dec 30"
+        const date = new Date(label);
+        return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      } else {
+        // Format as "December 30"
+        const date = new Date(label);
+        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      }
+    });
+  
+    return { 
+      labels: formattedLabels,
+      datasets 
+    };
+  };
+
+  const renderChart = () => {
+    const chartConfig = {
+      backgroundColor: '#ffffff',
+      backgroundGradientFrom: '#ffffff',
+      backgroundGradientTo: '#ffffff',
+      decimalPlaces: 0,
+      color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+      labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+      style: {
+        borderRadius: 16
+      },
+      propsForDots: {
+        r: "6",
+        strokeWidth: "2"
+      }
+    };
+
+    return (
+      <View style={styles.chartContainer}>
+        <Text style={styles.chartTitle}>Sentiment Trends</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <LineChart
+            data={prepareChartData()}
+            width={Dimensions.get('window').width * 1.5}
+            height={220}
+            chartConfig={chartConfig}
+            bezier
+            style={styles.chart}
+          />
+        </ScrollView>
+        
+        {/* Legend */}
+        <View style={styles.legendContainer}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#4CAF50' }]} />
+            <Text style={styles.legendText}>Positive Entries</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#FFC107' }]} />
+            <Text style={styles.legendText}>Neutral Entries</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#F44336' }]} />
+            <Text style={styles.legendText}>Negative Entries</Text>
+          </View>
+        </View>
+
+        {/* Guidelines */}
+        <View style={styles.guidelinesContainer}>
+          <Text style={styles.guidelinesTitle}>Understanding Your {timeframe.charAt(0).toUpperCase() + timeframe.slice(1)} Patterns:</Text>
+          <View style={styles.guidelineItem}>
+            <Text style={styles.bulletPoint}>•</Text>
+            <Text style={styles.guidelineText}>
+              {timeframe === 'daily' 
+                ? 'Peak Hours: Most active journaling times show higher points' 
+                : 'Peak Days: Days with most journaling activity'}
+            </Text>
+          </View>
+          <View style={styles.guidelineItem}>
+            <Text style={styles.bulletPoint}>•</Text>
+            <Text style={styles.guidelineText}>Sentiment Distribution: Compare positive vs negative entries</Text>
+          </View>
+          <View style={styles.guidelineItem}>
+            <Text style={styles.bulletPoint}>•</Text>
+            <Text style={styles.guidelineText}>Pattern Recognition: Identify recurring emotional patterns</Text>
+          </View>
+        </View>
+
+        {/* Axis Labels */}
+        <View style={styles.axisLabels}>
+          <Text style={styles.axisText}>
+            X-Axis: {timeframe === 'daily' ? 'Time (24-hour format)' : 'Date'}
+          </Text>
+          <Text style={styles.axisText}>Y-Axis: Number of Journal Entries</Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -91,105 +175,88 @@ const JournalAnalyticsScreen = ({ navigation }) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Feather name="chevron-left" size={24} color="#FFFFFF" />
+          <Feather name="chevron-left" size={24} color="#000000" />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Journal Analytics</Text>
         <View style={{ width: 60 }} />
       </View>
 
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.content}>
-          {/* Overall Sentiment Summary */}
-          <View style={styles.summaryContainer}>
-            <Text style={styles.sectionTitle}>Current Period Summary</Text>
-            <View style={styles.summaryStats}>
-              <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: '#4CAF50' }]}>65%</Text>
-                <Text style={styles.statLabel}>Positive</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: '#FFC107' }]}>25%</Text>
-                <Text style={styles.statLabel}>Neutral</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: '#FF5252' }]}>10%</Text>
-                <Text style={styles.statLabel}>Negative</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#007AFF" style={styles.loader} />
+      ) : (
+        <ScrollView style={styles.scrollView}>
+          <View style={styles.content}>
+            {/* Timeframe Toggle */}
+            <View style={styles.toggleContainer}>
+              {['daily', 'weekly', 'monthly'].map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  style={[
+                    styles.toggleButton,
+                    timeframe === option && styles.toggleButtonActive
+                  ]}
+                  onPress={() => setTimeframe(option)}
+                >
+                  <Text style={[
+                    styles.toggleText,
+                    timeframe === option && styles.toggleTextActive
+                  ]}>
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Sentiment Summary */}
+            <View style={styles.summaryContainer}>
+              <Text style={styles.sectionTitle}>Sentiment Summary</Text>
+              <View style={styles.summaryStats}>
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: '#4CAF50' }]}>
+                    {analytics?.sentiment_summary?.positive || 0}%
+                  </Text>
+                  <Text style={styles.statLabel}>Positive</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: '#FFC107' }]}>
+                    {analytics?.sentiment_summary?.neutral || 0}%
+                  </Text>
+                  <Text style={styles.statLabel}>Neutral</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={[styles.statValue, { color: '#F44336' }]}>
+                    {analytics?.sentiment_summary?.negative || 0}%
+                  </Text>
+                  <Text style={styles.statLabel}>Negative</Text>
+                </View>
               </View>
             </View>
-          </View>
 
-          {/* Timeframe Toggle */}
-          <View style={styles.toggleContainer}>
-            <TouchableOpacity 
-              style={[
-                styles.toggleButton,
-                timeframe === 'weekly' && styles.toggleButtonActive
-              ]}
-              onPress={() => setTimeframe('weekly')}
-            >
-              <Text style={[
-                styles.toggleText,
-                timeframe === 'weekly' && styles.toggleTextActive
-              ]}>Weekly</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[
-                styles.toggleButton,
-                timeframe === 'monthly' && styles.toggleButtonActive
-              ]}
-              onPress={() => setTimeframe('monthly')}
-            >
-              <Text style={[
-                styles.toggleText,
-                timeframe === 'monthly' && styles.toggleTextActive
-              ]}>Monthly</Text>
-            </TouchableOpacity>
-          </View>
+            {/* Chart Section */}
+            {analytics && renderChart()}
 
-          {/* Sentiment Trend Chart */}
-          <View style={styles.chartContainer}>
-            <Text style={styles.chartTitle}>
-              {timeframe === 'weekly' ? 'Weekly Sentiment Trend' : 'Monthly Sentiment Trend'}
-            </Text>
-            <LineChart
-              data={timeframe === 'weekly' ? weeklyData : monthlyData}
-              width={screenWidth - 40}
-              height={220}
-              chartConfig={chartConfig}
-              bezier
-              style={styles.chart}
-            />
+            {/* Mood Distribution */}
+            <View style={styles.moodContainer}>
+              <Text style={styles.sectionTitle}>Mood Distribution</Text>
+              {Object.entries(analytics?.mood_analysis?.distribution || {}).map(([mood, percentage]) => (
+                <View key={mood} style={styles.moodRow}>
+                  <Text style={styles.moodLabel}>{mood}</Text>
+                  <View style={styles.moodBarContainer}>
+                    <View 
+                      style={[
+                        styles.moodBar,
+                        { width: `${percentage}%` }
+                      ]} 
+                    />
+                    <Text style={styles.moodPercentage}>{percentage}%</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
           </View>
-
-          {/* Legend */}
-          <View style={styles.legendContainer}>
-            <Text style={styles.legendText}>
-              Sentiment scale: 0 (Negative) to 1 (Positive)
-            </Text>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        {navigationItems.map((item, index) => (
-          <TouchableOpacity 
-            key={index} 
-            style={styles.navItem}
-            onPress={item.onPress}
-          >
-            {item.icon({ 
-              color: item.route === 'Profile' ? "#007AFF" : "#666666", 
-              size: 24 
-            })}
-            <Text style={[
-              styles.navLabel,
-              item.route === 'Profile' && styles.navLabelActive
-            ]}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -200,7 +267,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#8ec6e6',
   },
   header: {
-    backgroundColor: '#8ec6e6', // Match AssessmentScreen header color
+    backgroundColor: '#8ec6e6',
     borderRadius: 15,
     paddingVertical: 20,
     paddingHorizontal: 20,
@@ -213,8 +280,13 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     borderWidth: 1,
     borderColor: '#b0d9ec',
-    flexDirection: 'row', // Row layout for title and date
+    flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000000',
   },
   backButton: {
     flexDirection: 'row',
@@ -226,46 +298,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 5,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
-    textAlign: 'center',
-  },
-  scrollView: {
-    flex: 1,
-  },
   content: {
     padding: 20,
     paddingBottom: 80,
-  },
-  summaryContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginBottom: 15,
-  },
-  summaryStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#666666',
-    marginTop: 5,
   },
   toggleContainer: {
     flexDirection: 'row',
@@ -291,58 +326,144 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: 'bold',
   },
+  summaryContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+  },
   chartContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
     padding: 15,
     marginBottom: 20,
-    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 15,
   },
   chartTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  summaryStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 5,
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 15,
+  },
+  legendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 15,
+    paddingHorizontal: 10,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 5,
+  },
+  legendText: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  guidelinesContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
+  },
+  guidelinesTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000000',
     marginBottom: 10,
-    alignSelf: 'flex-start',
   },
-  chart: {
-    borderRadius: 15,
-    marginVertical: 8,
+  guidelineItem: {
+    flexDirection: 'row',
+    marginBottom: 5,
   },
-  legendContainer: {
+  bulletPoint: {
+    marginRight: 5,
+    color: '#007AFF',
+  },
+  guidelineText: {
+    fontSize: 14,
+    color: '#666666',
+    flex: 1,
+  },
+  axisLabels: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+  },
+  axisText: {
+    fontSize: 12,
+    color: '#666666',
+    marginBottom: 5,
+  },
+  moodContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
     padding: 15,
     marginBottom: 20,
   },
-  legendText: {
+  moodRow: {
+    marginBottom: 10,
+  },
+  moodLabel: {
     fontSize: 14,
-    color: '#666666',
-    textAlign: 'center',
+    color: '#000000',
+    marginBottom: 5,
   },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 6,
-    left: 0,
-    right: 0,
-    backgroundColor: '#8ec6e6',
+  moodBarContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
-  },
-  navItem: {
     alignItems: 'center',
-    justifyContent: 'center',
+    height: 20,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 10,
   },
-  navLabel: {
+  moodBar: {
+    height: '100%',
+    backgroundColor: '#007AFF',
+    borderRadius: 10,
+  },
+  moodPercentage: {
+    position: 'absolute',
+    right: 10,
     fontSize: 12,
-    color: '#666666',
-    marginTop: 4,
+    color: '#000000',
   },
-  navLabelActive: {
-    color: '#007AFF',
-    fontWeight: 'bold',
-  },
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  }
 });
 
 export default JournalAnalyticsScreen;
