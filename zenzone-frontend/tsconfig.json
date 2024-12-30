@@ -1,0 +1,14 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "strict": true, // Enable strict type checking
+    "noImplicitAny": true, // Prevent variables with implicit 'any' types
+    "esModuleInterop": true, // Handle ES module imports correctly
+    "resolveJsonModule": true, // Enable importing JSON files
+    "moduleResolution": "node", // Use the Node.js module resolution strategy
+    "jsx": "react-native",
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true, // Skip type checking of library files
+    "module": "commonjs"
+  }
+}

@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+env/
+venv/
+.env
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Model files
+#  *.pth
+# journal_sentiment/models/*.pth
+
+# Other
+.DS_Store
+
