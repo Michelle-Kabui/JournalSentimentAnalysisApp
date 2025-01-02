@@ -48,7 +48,7 @@ SECRET_KEY = 'django-insecure-ozhdezj%tcrkcjgqpr)$-=+tp7_*dslssy_vwuj^acei$^g#aa
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.8.178', '172.20.10.2']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.8.178', '172.20.10.2', '192.168.1.102',]
 # Application definition
 
 INSTALLED_APPS = [
@@ -72,8 +72,10 @@ INSTALLED_APPS = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:19000",  # Metro Bundler
     "http://127.0.0.1:19000",
-    "http://172.20.10.2:19000",  # Replace with your local IP
+    "http://172.20.10.2:19000",  
     "http://192.168.8.178:19000",
+    "http://192.168.1.102:19000",
+
 ]
 
 MIDDLEWARE = [

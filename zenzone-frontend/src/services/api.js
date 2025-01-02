@@ -1,4 +1,4 @@
-const BASE_URL = 'http://192.168.8.178:8000/api';
+const BASE_URL = 'http://192.168.1.102:8000/api';
 
 export const API = {
     // Authentication
