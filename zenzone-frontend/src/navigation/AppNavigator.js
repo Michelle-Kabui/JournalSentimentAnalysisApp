@@ -17,8 +17,7 @@ import JournalDetailScreen from '../screens/app/JournalDetailScreen';
 import ProfileScreen from '../screens/app/ProfileScreen';
 import AssessmentHistoryScreen from '../screens/app/AssessmentHistoryScreen';
 import JournalAnalyticsScreen from '../screens/app/JournalAnalyticsScreen';
-
-
+import EditProfileScreen from '../screens/app/EditProfileScreen';
 // In Stack.Navigator
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +38,7 @@ export default function AppNavigator() {
         <Stack.Screen name="MDQ" component={MDQScreen} /> 
         <Stack.Screen name="BSDS" component={BSDSScreen} />
         <Stack.Screen name="Results" component={ResultsScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="JournalHistory" 
        component={JournalHistoryScreen}
        options={{ headerShown: false }}

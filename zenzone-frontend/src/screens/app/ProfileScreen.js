@@ -12,14 +12,17 @@ import {
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { API } from '../../services/api';
 import { TokenStorage } from '../../utils/tokenStorage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const ProfileScreen = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUserProfile();
+    }, [])
+  );
 
   const fetchUserProfile = async () => {
     try {
@@ -111,6 +114,13 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={styles.joinDate}>
                 {userData?.date_joined ? `Joined: ${userData.date_joined}` : ''}
               </Text>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => navigation.navigate('EditProfile', { userData })}
+              >
+                <Feather name="edit" size={20} color="#007AFF" />
+                <Text style={styles.editButtonText}>Edit Profile</Text>
+              </TouchableOpacity>
             </View>
           </View>
     {/* Analytics Navigation Section */}
@@ -328,6 +338,22 @@ const styles = StyleSheet.create({
     color: '#666666',
     marginTop: 5,
   },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F8FF',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    marginTop: 15,
+  },
+  editButtonText: {
+    color: '#007AFF',
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
   
 });
 

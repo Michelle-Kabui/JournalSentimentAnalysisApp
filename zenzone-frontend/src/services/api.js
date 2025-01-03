@@ -33,6 +33,7 @@ export const API = {
 
     updateUserProfile: async (token, userData) => {
         try {
+            console.log('Updating profile with data:', userData);
             const response = await fetch(`${BASE_URL}/auth/profile/`, {
                 method: 'PUT',
                 headers: {
@@ -42,11 +43,17 @@ export const API = {
                 body: JSON.stringify(userData)
             });
             
+            console.log('Update response status:', response.status);
+            
             if (!response.ok) {
-                throw new Error('Failed to update user profile');
+                const errorData = await response.json();
+                console.error('Update error response:', errorData);
+                throw new Error(errorData.message || 'Failed to update user profile');
             }
             
-            return await response.json();
+            const data = await response.json();
+            console.log('Profile updated successfully:', data);
+            return data;
         } catch (error) {
             console.error('Error updating user profile:', error);
             throw error;
