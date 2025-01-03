@@ -9,9 +9,10 @@ import {
   Alert
 } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { API } from '../../services/api';
+import { TokenStorage } from '../../utils/tokenStorage';
 
 const MDQScreen = ({ navigation, route }) => {
-  // State for the 13 main questions
   const [answers, setAnswers] = useState({
     q1_1: null, q1_2: null, q1_3: null, q1_4: null,
     q1_5: null, q1_6: null, q1_7: null, q1_8: null,
@@ -21,7 +22,6 @@ const MDQScreen = ({ navigation, route }) => {
     q3: null   // problem severity question
   });
 
-  // Questions array
   const questions = [
     "...you felt so good or so hyper that other people thought you were not your normal self or you were so hyper that you got into trouble?",
     "...you were so irritable that you shouted at people or started fights or arguments?",
@@ -38,9 +38,7 @@ const MDQScreen = ({ navigation, route }) => {
     "...spending money got you or your family in trouble?"
   ];
 
-  // Calculate MDQ score and handle submission
-  const handleSubmit = () => {
-    // Check if all questions are answered
+  const handleSubmit = async () => {
     const unansweredQuestions = Object.entries(answers).filter(([key, value]) => value === null);
     
     if (unansweredQuestions.length > 0) {
@@ -52,30 +50,39 @@ const MDQScreen = ({ navigation, route }) => {
       return;
     }
 
-    // Calculate the score
     const mdqScore = {
       yesAnswers: Object.entries(answers)
-        .filter(([key, value]) => key.startsWith('q1_') && value === true)
-        .length,
+          .filter(([key, value]) => key.startsWith('q1_') && value === true)
+          .length,
       sameTimePeriod: answers.q2,
       problemLevel: answers.q3
-    };
-
-    // Determine next screen based on route params
-    if (route.params?.fromBSDS) {
-      // If coming from BSDS, navigate to results with both scores
-      navigation.navigate('Results', {
-        mdqResults: mdqScore,
-        bsdsResults: route.params.bsdsResults
-      });
-    } else {
-      // If starting with MDQ, navigate to BSDS
-      navigation.navigate('BSDS', {
-        mdqResults: mdqScore,
-        fromMDQ: true
-      });
-    }
   };
+
+  try {
+      // Save MDQ results
+      const token = await TokenStorage.getAccessToken();
+      if (token) {
+          await API.saveAssessmentResult(token, {
+              assessment_type: 'MDQ',
+              mdq_yes_answers: mdqScore.yesAnswers,
+              mdq_same_time_period: mdqScore.sameTimePeriod,
+              mdq_problem_level: mdqScore.problemLevel,
+          });
+      }
+
+      // Navigate to BSDS first instead of Results
+      navigation.navigate('BSDS', {
+          mdqResults: mdqScore,
+          fromMDQ: true
+      });
+  } catch (error) {
+      console.error('Error saving MDQ results:', error);
+      navigation.navigate('BSDS', {
+          mdqResults: mdqScore,
+          fromMDQ: true
+      });
+  }
+};
 
   const navigationItems = [
     { 

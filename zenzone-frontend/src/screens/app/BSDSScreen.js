@@ -9,6 +9,8 @@ import {
   Alert
 } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { API } from '../../services/api';
+import { TokenStorage } from '../../utils/tokenStorage';
 
 const BSDSScreen = ({ navigation, route }) => {
   // State for story statements
@@ -51,7 +53,7 @@ const BSDSScreen = ({ navigation, route }) => {
     setCheckedItems(newCheckedItems);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!storyFit) {
       Alert.alert(
         "Incomplete Assessment",
@@ -61,27 +63,35 @@ const BSDSScreen = ({ navigation, route }) => {
       return;
     }
 
-    // Calculate BSDS score
     const bsdsScore = {
       checkedStatements: checkedItems.filter(item => item).length,
       storyFit: storyFit
-    };
-
-    // Determine next screen based on route params
-    if (route.params?.fromMDQ) {
-      // If coming from MDQ, navigate to results with both scores
-      navigation.navigate('Results', {
-        bsdsResults: bsdsScore,
-        mdqResults: route.params.mdqResults
-      });
-    } else {
-      // If starting with BSDS, navigate to MDQ
-      navigation.navigate('MDQ', {
-        bsdsResults: bsdsScore,
-        fromBSDS: true
-      });
-    }
   };
+
+  try {
+      // Save BSDS results
+      const token = await TokenStorage.getAccessToken();
+      if (token) {
+          await API.saveAssessmentResult(token, {
+              assessment_type: 'BSDS',
+              bsds_checked_statements: bsdsScore.checkedStatements,
+              bsds_story_fit: bsdsScore.storyFit,
+          });
+      }
+
+      // Now navigate to Results with BOTH scores
+      navigation.navigate('Results', {
+          mdqResults: route.params?.mdqResults, // Get MDQ results from route params
+          bsdsResults: bsdsScore
+      });
+  } catch (error) {
+      console.error('Error saving BSDS results:', error);
+      navigation.navigate('Results', {
+          mdqResults: route.params?.mdqResults,
+          bsdsResults: bsdsScore
+      });
+  }
+};
 
   const navigationItems = [
     { 

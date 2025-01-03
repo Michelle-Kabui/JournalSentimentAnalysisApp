@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'authentication',
     'journal',
     'journal_sentiment',
+    'assessments',
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:19000",  # Metro Bundler

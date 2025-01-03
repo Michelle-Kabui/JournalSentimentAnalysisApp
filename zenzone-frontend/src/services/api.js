@@ -207,34 +207,101 @@ export const API = {
 
     // Analytics
    getJournalAnalytics: async (token, timeframe = 'weekly') => {
-    try {
-        console.log('Fetching analytics with timeframe:', timeframe);
-        console.log('Using token:', token ? 'Token exists' : 'No token');
-        
-        const response = await fetch(
-            `${BASE_URL}/journal/entries/analytics/?timeframe=${timeframe}`,
-            {
+        try {
+            console.log('Fetching analytics with timeframe:', timeframe);
+            console.log('Using token:', token ? 'Token exists' : 'No token');
+            
+            const response = await fetch(
+                `${BASE_URL}/journal/entries/analytics/?timeframe=${timeframe}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                }
+            );
+            
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Error data:', errorData);
+                throw new Error(`Failed to fetch analytics: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Analytics data received:', data);
+            return data;
+        } catch (error) {
+            console.error('Detailed error:', error);
+            throw error;
+        }
+    },
+    getAssessmentHistory: async (token) => {
+        try {
+            console.log('Attempting to fetch assessment history...');
+            console.log('Using token:', token ? 'Token present' : 'No token');
+            console.log('Fetch URL:', `${BASE_URL}/assessments/history/`);
+
+            const response = await fetch(`${BASE_URL}/assessments/history/`, {
+                method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 }
+            });
+            
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error(`Failed to fetch assessment history: ${response.status}`);
             }
-        );
-        
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Error data:', errorData);
-            throw new Error(`Failed to fetch analytics: ${response.status}`);
+            
+            const data = await response.json();
+            console.log('Successfully fetched assessment history:', data);
+            return data;
+        } catch (error) {
+            console.error('Detailed fetch error:', error);
+            throw error;
         }
-        
-        const data = await response.json();
-        console.log('Analytics data received:', data);
-        return data;
-    } catch (error) {
-        console.error('Detailed error:', error);
-        throw error;
+    },
+
+    saveAssessmentResult: async (token, assessmentData) => {
+        try {
+            console.log('Saving assessment result...');
+            console.log('Assessment data:', assessmentData);
+
+            const response = await fetch(`${BASE_URL}/assessments/save/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(assessmentData)
+            });
+
+            console.log('Save response status:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error('Failed to save assessment result');
+            }
+
+            const data = await response.json();
+            console.log('Successfully saved assessment:', data);
+            return data;
+        } catch (error) {
+            console.error('Error saving assessment result:', error);
+            throw error;
+        }
     }
-}
+
+
+
+
 };
+export default API;
+

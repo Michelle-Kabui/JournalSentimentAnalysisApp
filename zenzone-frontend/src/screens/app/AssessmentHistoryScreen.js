@@ -1,4 +1,5 @@
-import React from 'react';
+import { API } from '../../services/api';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,85 +7,89 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { TokenStorage } from '../../utils/tokenStorage';
 
 const AssessmentHistoryScreen = ({ navigation }) => {
-  // Dummy data - will be replaced with API data
-  const assessmentHistory = [
-    {
-      id: '1',
-      type: 'MDQ',
-      date: '2024-12-28',
-      time: '14:30',
-      results: {
-        yesAnswers: 8,
-        sameTimePeriod: true,
-        problemLevel: 'Moderate problem',
-        interpretation: 'Further medical assessment warranted'
-      }
-    },
-    {
-      id: '2',
-      type: 'BSDS',
-      date: '2024-12-28',
-      time: '15:00',
-      results: {
-        score: 15,
-        interpretation: 'Moderate Probability'
-      }
-    },
-    {
-      id: '3',
-      type: 'MDQ',
-      date: '2024-12-15',
-      time: '09:45',
-      results: {
-        yesAnswers: 6,
-        sameTimePeriod: true,
-        problemLevel: 'Minor problem',
-        interpretation: 'No strong indication'
-      }
-    },
-  ];
+  const [assessmentHistory, setAssessmentHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState('all');
+
+  useEffect(() => {
+    fetchAssessmentHistory();
+}, []);
+
+const fetchAssessmentHistory = async () => {
+    try {
+        setLoading(true);
+        const token = await TokenStorage.getAccessToken();
+        if (!token) {
+            navigation.replace('Login');
+            return;
+        }
+        
+        const history = await API.getAssessmentHistory(token);
+        setAssessmentHistory(history);
+    } catch (error) {
+        console.error('Detailed error in fetchAssessmentHistory:', error);
+        Alert.alert('Error', 'Failed to load assessment history');
+    } finally {
+        setLoading(false);
+    }
+};
 
   const formatDate = (dateString) => {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
-  const getResultSummary = (assessment) => (
-    <Text style={styles.resultSummary}>
-      {assessment.type === 'MDQ' 
-        ? `${assessment.results.yesAnswers}/13 Yes responses - ${assessment.results.interpretation}`
-        : `Score: ${assessment.results.score} - ${assessment.results.interpretation}`
-      }
-    </Text>
-  );
-
-  const getStatusColor = (assessment) => {
-    if (assessment.type === 'MDQ') {
-      return assessment.results.yesAnswers >= 7 ? '#FF4444' : '#4CAF50';
-    } else {
-      return assessment.results.score >= 11 ? '#FF4444' : '#4CAF50';
-    }
-  };
   const getFilteredAssessments = () => {
     switch(selectedFilter) {
-      case 'mdq':
-        return assessmentHistory.filter(a => a.type === 'MDQ');
-      case 'bsds':
-        return assessmentHistory.filter(a => a.type === 'BSDS');
-      case 'recent':
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        return assessmentHistory.filter(a => new Date(a.date) >= oneWeekAgo);
-      default:
-        return assessmentHistory;
+        case 'mdq':
+            return assessmentHistory.filter(a => a.assessment_type === 'MDQ');
+        case 'bsds':
+            return assessmentHistory.filter(a => a.assessment_type === 'BSDS');
+        default:
+            return assessmentHistory;
+    }
+};
+
+  const getResultSummary = (assessment) => {
+    if (assessment.assessment_type === 'MDQ') {
+        return `${assessment.mdq_yes_answers}/13 Yes responses - ${
+            assessment.mdq_yes_answers >= 7 && assessment.mdq_same_time_period 
+            && assessment.mdq_problem_level >= 2 
+                ? 'Further assessment warranted' 
+                : 'No strong indication'
+        }`;
+    } else { // BSDS
+        const totalScore = (assessment.bsds_checked_statements || 0) + 
+            (3 - (assessment.bsds_story_fit || 0));
+        let interpretation = '';
+        if (totalScore < 6) interpretation = 'Very low probability';
+        else if (totalScore <= 10) interpretation = 'Low probability';
+        else if (totalScore <= 18) interpretation = 'Moderate probability';
+        else interpretation = 'High probability';
+        
+        return `Score: ${totalScore} - ${interpretation}`;
     }
   };
+
+  const getStatusColor = (assessment) => {
+    if (assessment.assessment_type === 'MDQ') {
+        return assessment.mdq_yes_answers >= 7 &&
+               assessment.mdq_same_time_period &&
+               assessment.mdq_problem_level >= 2
+            ? '#FF4444' : '#4CAF50';
+    } else { // BSDS
+        const totalScore = (assessment.bsds_checked_statements || 0) + 
+            (3 - (assessment.bsds_story_fit || 0));
+        return totalScore >= 11 ? '#FF4444' : '#4CAF50';
+    }
+};
 
   const navigationItems = [
     { 
@@ -112,24 +117,24 @@ const AssessmentHistoryScreen = ({ navigation }) => {
       onPress: () => navigation.navigate('Profile')
     }
   ];
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Feather name="chevron-left" size={24} color="#000000" />
-          <Text style={styles.backButtonText}>Back</Text>
-        </TouchableOpacity>
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => navigation.navigate('Assessment')}
+      >
+        <Feather name="chevron-left" size={24} color="#000000" />
+        <Text style={styles.backButtonText}>Back</Text>
+      </TouchableOpacity>
         <Text style={styles.headerTitle}>Assessment History</Text>
-        <View style={{ width: 60 }}>
-          <Text> </Text>
-        </View>
+        <View style={{ width: 60 }} />
       </View>
 
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
+          {/* Summary Container */}
           <View style={styles.summaryContainer}>
             <View style={styles.summaryItem}>
               <Text style={styles.summaryNumber}>
@@ -141,45 +146,109 @@ const AssessmentHistoryScreen = ({ navigation }) => {
             </View>
           </View>
 
+        <View style={styles.filterContainer}>
+        <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScroll}
+        >
+            <TouchableOpacity 
+                style={[
+                    styles.filterButton,
+                    selectedFilter === 'all' && styles.filterButtonActive
+                ]}
+                onPress={() => setSelectedFilter('all')}
+            >
+                <Text style={[
+                    styles.filterText,
+                    selectedFilter === 'all' && styles.filterTextActive
+                ]}>All</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+                style={[
+                    styles.filterButton,
+                    selectedFilter === 'mdq' && styles.filterButtonActive
+                ]}
+                onPress={() => setSelectedFilter('mdq')}
+            >
+                <Text style={[
+                    styles.filterText,
+                    selectedFilter === 'mdq' && styles.filterTextActive
+                ]}>MDQ</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+                style={[
+                    styles.filterButton,
+                    selectedFilter === 'bsds' && styles.filterButtonActive
+                ]}
+                onPress={() => setSelectedFilter('bsds')}
+            >
+                <Text style={[
+                    styles.filterText,
+                    selectedFilter === 'bsds' && styles.filterTextActive
+                ]}>BSDS</Text>
+            </TouchableOpacity>
+        </ScrollView>
+    </View>
+
+          {/* History List */}
           <View style={styles.historyContainer}>
-            {getFilteredAssessments().map((assessment) => (
-              <TouchableOpacity
-                key={assessment.id}
-                style={styles.assessmentCard}
-                onPress={() => navigation.navigate('Results', { 
-                  mdqResults: assessment.type === 'MDQ' ? assessment.results : null,
-                  bsdsResults: assessment.type === 'BSDS' ? assessment.results : null,
-                })}
-              >
-                <View style={styles.cardHeader}>
-                  <View style={styles.typeContainer}>
-                    <View 
-                      style={[
-                        styles.statusDot, 
-                        { backgroundColor: getStatusColor(assessment) }
-                      ]} 
-                    />
-                    <Text style={styles.assessmentType}>{assessment.type}</Text>
+            {loading ? (
+              <ActivityIndicator size="large" color="#007AFF" style={styles.loader} />
+            ) : (
+              getFilteredAssessments().map((assessment) => (
+                <TouchableOpacity
+                  key={assessment.id}
+                  style={styles.assessmentCard}
+                  onPress={() => navigation.navigate('Results', { 
+                    mdqResults: assessment.assessment_type === 'MDQ' ? {
+                      yesAnswers: assessment.mdq_yes_answers,
+                      sameTimePeriod: assessment.mdq_same_time_period,
+                      problemLevel: assessment.mdq_problem_level
+                    } : null,
+                    bsdsResults: assessment.assessment_type === 'BSDS' ? {
+                      checkedStatements: assessment.bsds_checked_statements,
+                      storyFit: assessment.bsds_story_fit
+                    } : null,
+                  })}
+                >
+                  <View style={styles.cardHeader}>
+                    <View style={styles.typeContainer}>
+                      <View 
+                        style={[
+                          styles.statusDot, 
+                          { backgroundColor: getStatusColor(assessment) }
+                        ]} 
+                      />
+                      <Text style={styles.assessmentType}>{assessment.assessment_type}</Text>
+                    </View>
+                    <Text style={styles.assessmentTime}>
+                      {new Date(assessment.date_taken).toLocaleTimeString()}
+                    </Text>
                   </View>
-                  <Text style={styles.assessmentTime}>{assessment.time}</Text>
-                </View>
 
-                <Text style={styles.assessmentDate}>
-                  {formatDate(assessment.date)}
-                </Text>
+                  <Text style={styles.assessmentDate}>
+                    {formatDate(assessment.date_taken)}
+                  </Text>
 
-                {getResultSummary(assessment)}
+                  <Text style={styles.resultSummary}>
+                    {getResultSummary(assessment)}
+                  </Text>
 
-                <View style={styles.cardFooter}>
-                  <Text style={styles.viewDetails}>View Details</Text>
-                  <Feather name="chevron-right" size={20} color="#007AFF" />
-                </View>
-              </TouchableOpacity>
-            ))}
+                  <View style={styles.cardFooter}>
+                    <Text style={styles.viewDetails}>View Details</Text>
+                    <Feather name="chevron-right" size={20} color="#007AFF" />
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
           </View>
         </View>
       </ScrollView>
 
+      {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
         {navigationItems.map((item, index) => (
           <TouchableOpacity 
@@ -194,9 +263,7 @@ const AssessmentHistoryScreen = ({ navigation }) => {
             <Text style={[
               styles.navLabel,
               item.route === 'Assessment' && styles.navLabelActive
-            ]}>
-              {item.label}
-            </Text>
+            ]}>{item.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -210,7 +277,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#8ec6e6',
   },
   header: {
-    backgroundColor: '#8ec6e6', // Match AssessmentScreen header color
+    backgroundColor: '#8ec6e6',
     borderRadius: 15,
     paddingVertical: 20,
     paddingHorizontal: 20,
@@ -223,7 +290,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     borderWidth: 1,
     borderColor: '#b0d9ec',
-    flexDirection: 'row', // Row layout for title and date
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   backButton: {
@@ -240,7 +307,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#000000',
-    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
@@ -248,34 +314,6 @@ const styles = StyleSheet.create({
   content: {
     padding: 20,
     paddingBottom: 80,
-  },
-  filterContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 10,
-    borderRadius: 15,
-    margin: 15,
-    marginTop: 0,
-  },
-  filterScroll: {
-    paddingHorizontal: 5,
-  },
-  filterButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginHorizontal: 5,
-    backgroundColor: '#F0F0F0',
-  },
-  filterButtonActive: {
-    backgroundColor: '#007AFF',
-  },
-  filterText: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  filterTextActive: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
   },
   summaryContainer: {
     backgroundColor: '#FFFFFF',
@@ -357,6 +395,9 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     marginRight: 5,
   },
+  loader: {
+    marginTop: 20,
+  },
   bottomNav: {
     position: 'absolute',
     bottom: 6,
@@ -379,6 +420,34 @@ const styles = StyleSheet.create({
   navLabelActive: {
     color: '#007AFF',
     fontWeight: 'bold',
+  },
+  filterContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 15,
+    margin: 15,
+    marginTop: 0,
+},
+  filterScroll: {
+      paddingHorizontal: 5,
+  },
+  filterButton: {
+      paddingHorizontal: 20,
+      paddingVertical: 8,
+      borderRadius: 20,
+      marginHorizontal: 5,
+      backgroundColor: '#F0F0F0',
+  },
+  filterButtonActive: {
+      backgroundColor: '#007AFF',
+  },
+  filterText: {
+      fontSize: 14,
+      color: '#666666',
+  },
+  filterTextActive: {
+      color: '#FFFFFF',
+      fontWeight: 'bold',
   },
 });
 
