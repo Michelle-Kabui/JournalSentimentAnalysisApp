@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
       paddingHorizontal: 5,
   },
   filterButton: {
-      paddingHorizontal: 20,
+      paddingHorizontal: 30,
       paddingVertical: 8,
       borderRadius: 20,
       marginHorizontal: 5,
