@@ -14,7 +14,6 @@ import BSDSScreen from '../screens/app/BSDSScreen';
 import ResultsScreen from '../screens/app/ResultsScreen';
 import JournalHistoryScreen from '../screens/app/JournalHistoryScreen';
 import JournalDetailScreen from '../screens/app/JournalDetailScreen';
-import MoodVisualizationScreen from '../screens/app/MoodVisualizationScreen';
 import ProfileScreen from '../screens/app/ProfileScreen';
 import AssessmentHistoryScreen from '../screens/app/AssessmentHistoryScreen';
 import JournalAnalyticsScreen from '../screens/app/JournalAnalyticsScreen';
@@ -49,11 +48,7 @@ export default function AppNavigator() {
   component={JournalDetailScreen}
   options={{ headerShown: false }}
 />
-<Stack.Screen 
-  name="MoodVisualization" 
-  component={MoodVisualizationScreen}
-  options={{ headerShown: false }}
-/>
+
 <Stack.Screen 
   name="Profile" 
   component={ProfileScreen}

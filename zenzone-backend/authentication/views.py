@@ -6,6 +6,22 @@ from django.contrib.auth import authenticate
 from .serializers import UserSerializer
 from rest_framework.permissions import IsAuthenticated
 
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        """Get user profile data"""
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+    def put(self, request):
+        """Update user profile data"""
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+        
 class RegisterView(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)

@@ -1,6 +1,58 @@
 const BASE_URL = 'http://192.168.1.102:8000/api';
 
 export const API = {
+
+    // User Profile
+    getUserProfile: async (token) => {
+        try {
+            console.log('Fetching user profile...');
+            console.log('Token:', token);
+            const response = await fetch(`${BASE_URL}/auth/profile/`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error(`Failed to fetch user profile: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('Profile data received:', data);
+            return data;
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+            throw error;
+        }
+    },
+
+    updateUserProfile: async (token, userData) => {
+        try {
+            const response = await fetch(`${BASE_URL}/auth/profile/`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to update user profile');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating user profile:', error);
+            throw error;
+        }
+    },
+
     // Authentication
     register: async (userData) => {
         console.log('Attempting to connect to:', `${BASE_URL}/auth/register/`);
@@ -237,6 +289,8 @@ export const API = {
             throw error;
         }
     },
+     
+    
     getAssessmentHistory: async (token) => {
         try {
             console.log('Attempting to fetch assessment history...');
@@ -298,7 +352,6 @@ export const API = {
             throw error;
         }
     }
-
 
 
 

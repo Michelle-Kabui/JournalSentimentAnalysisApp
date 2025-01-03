@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,35 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { API } from '../../services/api';
+import { TokenStorage } from '../../utils/tokenStorage';
 
 const ProfileScreen = ({ navigation }) => {
-  // Dummy user data - will be replaced with actual user data
-  const userData = {
-    name: "John Doe",
-    email: "johndoe@example.com"
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    try {
+      const token = await TokenStorage.getAccessToken();
+      if (!token) {
+        navigation.replace('Login');
+        return;
+      }
+      const userProfile = await API.getUserProfile(token);
+      setUserData(userProfile);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      Alert.alert('Error', 'Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = () => {
@@ -61,7 +82,15 @@ const ProfileScreen = ({ navigation }) => {
       onPress: () => console.log('Already on Profile')
     }
   ];
-
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      </SafeAreaView>
+    );
+  }
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -72,28 +101,21 @@ const ProfileScreen = ({ navigation }) => {
   <View style={styles.content}>
     {/* User Info Section */}
     <View style={styles.userInfoContainer}>
-      <View style={styles.userInfo}>
-        <Text style={styles.userName}>{userData.name}</Text>
-        <Text style={styles.userEmail}>{userData.email}</Text>
-      </View>
-    </View>
-
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>
+                {userData?.username || 'User'}
+              </Text>
+              <Text style={styles.userEmail}>
+                {userData?.email || 'Email not available'}
+              </Text>
+              <Text style={styles.joinDate}>
+                {userData?.date_joined ? `Joined: ${userData.date_joined}` : ''}
+              </Text>
+            </View>
+          </View>
     {/* Analytics Navigation Section */}
     <View style={styles.analyticsContainer}>
       <Text style={styles.sectionTitle}>Analytics & Visualizations</Text>
-
-      <TouchableOpacity
-        style={styles.analyticsCard}
-        onPress={() => navigation.navigate('MoodVisualization')}
-      >
-        <Feather name="bar-chart-2" size={24} color="#007AFF" />
-        <View style={styles.cardTextContainer}>
-          <Text style={styles.cardTitle}>Mood Analytics</Text>
-          <Text style={styles.cardDescription}>View your mood patterns and trends</Text>
-        </View>
-        <Feather name="chevron-right" size={24} color="#007AFF" />
-      </TouchableOpacity>
-
       <TouchableOpacity
         style={styles.analyticsCard}
         onPress={() => navigation.navigate('JournalAnalytics')}
@@ -296,6 +318,17 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: 'bold',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  joinDate: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 5,
+  },
+  
 });
 
 export default ProfileScreen;
