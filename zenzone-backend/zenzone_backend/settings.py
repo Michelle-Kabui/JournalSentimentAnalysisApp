@@ -69,6 +69,8 @@ INSTALLED_APPS = [
     'journal',
     'journal_sentiment',
     'assessments',
+    'reminders',
+
 
 ]
 CORS_ALLOWED_ORIGINS = [

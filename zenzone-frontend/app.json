@@ -3,11 +3,22 @@
     "name": "JournalSentimentApp",
     "slug": "journal-sentiment-app",
     "scheme": "journal-sentiment-app",
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ffffff"
+        }
+      ]
+    ],
     "ios": {
       "newArchEnabled": true
+      
     },
     "android": {
       "newArchEnabled": true
     }
+    
   }
 }

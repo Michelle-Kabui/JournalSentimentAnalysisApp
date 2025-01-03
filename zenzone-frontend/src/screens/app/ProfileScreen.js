@@ -161,6 +161,17 @@ const ProfileScreen = ({ navigation }) => {
         </View>
         <Feather name="chevron-right" size={24} color="#007AFF" />
       </TouchableOpacity>
+      <TouchableOpacity
+  style={styles.analyticsCard}
+  onPress={() => navigation.navigate('Reminders')}
+>
+  <Feather name="bell" size={24} color="#007AFF" />
+  <View style={styles.cardTextContainer}>
+    <Text style={styles.cardTitle}>Reminders</Text>
+    <Text style={styles.cardDescription}>Manage your reminders</Text>
+  </View>
+  <Feather name="chevron-right" size={24} color="#007AFF" />
+</TouchableOpacity>
     </View>
 
     {/* Logout Button */}

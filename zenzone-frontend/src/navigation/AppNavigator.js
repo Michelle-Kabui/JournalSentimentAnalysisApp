@@ -18,6 +18,8 @@ import ProfileScreen from '../screens/app/ProfileScreen';
 import AssessmentHistoryScreen from '../screens/app/AssessmentHistoryScreen';
 import JournalAnalyticsScreen from '../screens/app/JournalAnalyticsScreen';
 import EditProfileScreen from '../screens/app/EditProfileScreen';
+import RemindersScreen from '../screens/app/RemindersScreen';
+
 // In Stack.Navigator
 const Stack = createNativeStackNavigator();
 
@@ -62,6 +64,11 @@ export default function AppNavigator() {
 <Stack.Screen 
   name="JournalAnalytics" 
   component={JournalAnalyticsScreen}
+  options={{ headerShown: false }}
+/>
+<Stack.Screen 
+  name="Reminders" 
+  component={RemindersScreen}
   options={{ headerShown: false }}
 />
       </Stack.Navigator>      

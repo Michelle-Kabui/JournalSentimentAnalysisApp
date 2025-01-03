@@ -358,8 +358,95 @@ export const API = {
             console.error('Error saving assessment result:', error);
             throw error;
         }
+    },
+    // Add to your existing API object in api.js
+    getReminders: async (token) => {
+      try {
+        const response = await fetch(`${BASE_URL}/reminders/reminders/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch reminders');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching reminders:', error);
+        throw error;
+      }
+    },
+  
+    // Create new reminder
+    createReminder: async (token, reminderData) => {
+      try {
+        const response = await fetch(`${BASE_URL}/reminders/reminders/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(reminderData)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create reminder');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Error creating reminder:', error);
+        throw error;
+      }
+    },
+  
+    // Update reminder
+    updateReminder: async (token, reminderId, reminderData) => {
+      try {
+        const response = await fetch(`${BASE_URL}/reminders/reminders/${reminderId}/`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(reminderData)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to update reminder');
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Error updating reminder:', error);
+        throw error;
+      }
+    },
+  
+    // Delete reminder
+    deleteReminder: async (token, reminderId) => {
+      try {
+        const response = await fetch(`${BASE_URL}/reminders/reminders/${reminderId}/`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete reminder');
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('Error deleting reminder:', error);
+        throw error;
+      }
     }
-
+ 
 
 
 };
