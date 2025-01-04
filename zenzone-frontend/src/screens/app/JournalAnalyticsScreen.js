@@ -43,22 +43,43 @@ const JournalAnalyticsScreen = ({ navigation }) => {
   };
 
   const prepareChartData = () => {
-    if (!analytics?.sentiment_trends) return null;
+    if (!analytics?.sentiment_trends || Object.keys(analytics.sentiment_trends).length === 0) {
+      return {
+        labels: [],
+        datasets: [
+          {
+            data: [],
+            color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+            label: 'Positive'
+          },
+          {
+            data: [],
+            color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`,
+            label: 'Neutral'
+          },
+          {
+            data: [],
+            color: (opacity = 1) => `rgba(244, 67, 54, ${opacity})`,
+            label: 'Negative'
+          }
+        ]
+      };
+    }
   
     const labels = Object.keys(analytics.sentiment_trends);
     const datasets = [
       {
-        data: labels.map(label => analytics.sentiment_trends[label].positive),
+        data: labels.map(label => analytics.sentiment_trends[label].positive || 0),
         color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
         label: 'Positive'
       },
       {
-        data: labels.map(label => analytics.sentiment_trends[label].neutral),
+        data: labels.map(label => analytics.sentiment_trends[label].neutral || 0),
         color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`,
         label: 'Neutral'
       },
       {
-        data: labels.map(label => analytics.sentiment_trends[label].negative),
+        data: labels.map(label => analytics.sentiment_trends[label].negative || 0),
         color: (opacity = 1) => `rgba(244, 67, 54, ${opacity})`,
         label: 'Negative'
       }
@@ -67,17 +88,17 @@ const JournalAnalyticsScreen = ({ navigation }) => {
     // Format labels based on timeframe
     const formattedLabels = labels.map(label => {
       if (timeframe === 'daily') {
-        // Convert 24-hour format to 12-hour format with AM/PM
-        const hour = parseInt(label.split(':')[0]);
+        // Add 5 hours to correct the time difference
+        const date = new Date(label);
+        date.setHours(date.getHours() + 5);
+        const hour = date.getHours();
         const ampm = hour >= 12 ? 'PM' : 'AM';
         const hour12 = hour % 12 || 12;
         return `${hour12}:00 ${ampm}`;
       } else if (timeframe === 'weekly') {
-        // Format as "Mon, Dec 30"
         const date = new Date(label);
         return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
       } else {
-        // Format as "December 30"
         const date = new Date(label);
         return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
       }
@@ -85,11 +106,16 @@ const JournalAnalyticsScreen = ({ navigation }) => {
   
     return { 
       labels: formattedLabels,
-      datasets 
+      datasets
     };
   };
 
   const renderChart = () => {
+    const chartData = prepareChartData();
+    const maxValue = Math.max(
+      ...chartData.datasets.flatMap(dataset => dataset.data)
+    );
+  
     const chartConfig = {
       backgroundColor: '#ffffff',
       backgroundGradientFrom: '#ffffff',
@@ -103,20 +129,36 @@ const JournalAnalyticsScreen = ({ navigation }) => {
       propsForDots: {
         r: "6",
         strokeWidth: "2"
-      }
+      },
+      // Ensure even distribution of y-axis values
+      yAxisInterval: 1,
+      formatYLabel: (value) => Math.floor(value),
+      // Only show integers on y-axis
+      count: Math.ceil(maxValue) + 1
     };
-
+  
     return (
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Sentiment Trends</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <LineChart
-            data={prepareChartData()}
+            data={chartData}
             width={Dimensions.get('window').width * 1.5}
             height={220}
             chartConfig={chartConfig}
             bezier
             style={styles.chart}
+            fromZero={true}
+            segments={Math.ceil(maxValue)}
+            yAxisMinValue={0}
+            yAxisMaxValue={Math.ceil(maxValue)}
+            // Add these new props to ensure proper y-axis display
+            withInnerLines={true}
+            withOuterLines={true}
+            withVerticalLines={false}
+            withHorizontalLines={true}
+            withVerticalLabels={true}
+            withHorizontalLabels={true}
           />
         </ScrollView>
         
