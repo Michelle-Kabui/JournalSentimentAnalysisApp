@@ -380,18 +380,18 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   timeSelector: {
-  backgroundColor: '#E0F7FA', // Lighter and eye-catching color
-  padding: 20,               // Increase padding
+  backgroundColor: '#E0F7FA', 
+  padding: 20,               
   borderRadius: 15,
   marginBottom: 15,
-  borderWidth: 2,            // Add border for prominence
+  borderWidth: 2,           
   borderColor: '#007AFF',
   alignItems: 'center',
   shadowColor: '#000',
   shadowOffset: { width: 0, height: 4 },
   shadowOpacity: 0.3,
   shadowRadius: 4,
-  elevation: 5, // For Android shadow
+  elevation: 5, 
 },
   timeSelectorText: {
     fontSize: 16,

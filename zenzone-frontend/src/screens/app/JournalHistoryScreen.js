@@ -21,7 +21,6 @@ const JournalHistoryScreen = ({ navigation }) => {
   const [journalEntries, setJournalEntries] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Add useEffect to fetch entries when screen loads
   useFocusEffect(
     React.useCallback(() => {
       fetchJournalEntries();
@@ -64,7 +63,6 @@ const JournalHistoryScreen = ({ navigation }) => {
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
-  // Function to get mood emoji
   const getMoodEmoji = (mood) => {
     const moodEmojis = {
       'Happy': '😀',

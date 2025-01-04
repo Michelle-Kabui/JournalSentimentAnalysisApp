@@ -23,11 +23,37 @@ const JournalAnalyticsScreen = ({ navigation }) => {
   useEffect(() => {
     fetchAnalytics();
   }, [timeframe]);
-
+  const navigationItems = [
+    { 
+      icon: ({color, size}) => <Feather name="home" size={size} color={color} />,
+      label: 'Home',
+      route: 'Home',
+      onPress: () => navigation.navigate('Home')
+    },
+    { 
+      icon: ({color, size}) => <Feather name="edit" size={size} color={color} />,
+      label: 'Journal',
+      route: 'Journal',
+      onPress: () => navigation.navigate('Journal')
+    },
+    { 
+      icon: ({color, size}) => <MaterialCommunityIcons name="book-open-variant" size={size} color={color} />,
+      label: 'Assessment',
+      route: 'Assessment',
+      onPress: () => console.log('Already on Assessment')
+    },
+    { 
+      icon: ({color, size}) => <Feather name="user" size={size} color={color} />,
+      label: 'Profile',
+      route: 'Profile',
+      onPress: () => navigation.navigate('Profile')
+    }
+  ];
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
       const token = await TokenStorage.getAccessToken();
+      
       if (!token) {
         navigation.replace('Login');
         return;
@@ -44,56 +70,105 @@ const JournalAnalyticsScreen = ({ navigation }) => {
   };
  
   const prepareChartData = () => {
+    console.log('Prepared chart data:', analytics?.sentiment_trends);
     if (!analytics?.sentiment_trends || Object.keys(analytics.sentiment_trends).length === 0) {
       return {
-        labels: ['No data'],
+        labels: [],
         datasets: [
           {
-            data: [0],
+            data: [],
             color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
             label: 'Positive',
           },
+          {
+            data: [],
+            color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`,
+            label: 'Neutral',
+          },
+          {
+            data: [],
+            color: (opacity = 1) => `rgba(244, 67, 54, ${opacity})`,
+            label: 'Negative',
+          },
         ],
+        maxValue:0,
       };
     }
   
-    const labels = Object.keys(analytics.sentiment_trends).sort();
+    const labels = Object.keys(analytics.sentiment_trends);
     const datasets = [
       {
-        data: labels.map(label => analytics.sentiment_trends[label]?.positive || 0),
+        data: labels.map(label => {
+          const value = analytics.sentiment_trends[label]?.positive || 0;
+          return Number.isFinite(value) ? value : 0;
+        }),
         color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
         label: 'Positive',
       },
       {
-        data: labels.map(label => analytics.sentiment_trends[label]?.neutral || 0),
+        data: labels.map(label => {
+          const value = analytics.sentiment_trends[label]?.neutral || 0;
+          return Number.isFinite(value) ? value : 0;
+        }),
         color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`,
         label: 'Neutral',
       },
       {
-        data: labels.map(label => analytics.sentiment_trends[label]?.negative || 0),
+        data: labels.map(label => {
+          const value = analytics.sentiment_trends[label]?.negative || 0;
+          return Number.isFinite(value) ? value : 0;
+        }),
         color: (opacity = 1) => `rgba(244, 67, 54, ${opacity})`,
         label: 'Negative',
       },
     ];
-  
     const allValues = datasets.flatMap(dataset => dataset.data);
-    const maxValue = Math.max(...allValues, 0); 
+    const maxValue = Math.max(...allValues, 0); // Calculate max value for chart scaling
+
   
-    return {
-      labels,
+    // Format labels based on timeframe
+    const formattedLabels = labels.map(label => {
+      if (timeframe === 'daily') {
+        const date = new Date(label);
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const hour12 = hours % 12 || 12;
+        return `${hour12}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
+      } else if (timeframe === 'weekly') {
+        const date = new Date(label);
+        return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      } else {
+        const date = new Date(label);
+        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      }
+    });
+  
+    return { 
+      labels: formattedLabels,
       datasets,
-      maxValue, 
+      maxValue,
     };
   };
   
+
   
-  // Update the renderChart function to include error handling
+  
   const renderChart = () => {
-    try {
-      const chartData = prepareChartData();
-      const allValues = chartData.datasets.flatMap((dataset) => dataset.data);
-      const maxValue = Math.max(...allValues, 0); // Calculate maxValue
+    const chartData = prepareChartData();
   
+    if (!chartData || chartData.labels.length === 0) {
+      return (
+        <View style={styles.chartContainer}>
+          <Text style={styles.chartTitle}>Sentiment Trends</Text>
+          <Text style={styles.noDataText}>No journal entries available to display trends.</Text>
+        </View>
+      );
+    }
+    const allValues = chartData.datasets.flatMap((dataset) => dataset.data);
+    const maxValue = Math.max(...allValues, 0);
+    const suggestedMax = Math.ceil(maxValue / 5) * 5 || 5; // Ensure max is a multiple of 5
+
       const chartConfig = {
         backgroundColor: '#ffffff',
         backgroundGradientFrom: '#ffffff',
@@ -109,29 +184,23 @@ const JournalAnalyticsScreen = ({ navigation }) => {
           strokeWidth: "2",
         },
       };
-  
+
     return (
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Sentiment Trends</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <LineChart
-            data={chartData}
-            width={Dimensions.get('window').width * 1.5}
-            height={220}
-            chartConfig={chartConfig}
-            bezier
-            style={styles.chart}
-            fromZero={true}
-            segments={Math.ceil(maxValue)}
-            yAxisMinValue={0}
-            yAxisMaxValue={Math.ceil(maxValue)}
-            withInnerLines={true}
-            withOuterLines={true}
-            withVerticalLines={false}
-            withHorizontalLines={true}
-            withVerticalLabels={true}
-            withHorizontalLabels={true}
-          />
+        <LineChart
+          data={chartData}
+          width={Dimensions.get('window').width * 1.5}
+          height={220}
+          chartConfig={chartConfig}
+          bezier
+          style={styles.chart}
+          fromZero={true} // Ensure y-axis starts from zero
+          yAxisInterval={1} // Interval between y-axis labels
+          segments={5} // Fixed number of segments for clarity
+          yAxisMaxValue={suggestedMax} // Ensure y-axis has a consistent maximum
+        />
         </ScrollView>
         
         {/* Legend */}
@@ -181,15 +250,7 @@ const JournalAnalyticsScreen = ({ navigation }) => {
       </View>
     );
 
-  } catch (error) {
-    console.error('Error rendering chart:', error);
-    return (
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>Sentiment Trends</Text>
-        <Text style={styles.errorText}>Unable to display chart at this time</Text>
-      </View>
-    );
-  }
+  
 };
 
   return (
@@ -259,28 +320,29 @@ const JournalAnalyticsScreen = ({ navigation }) => {
 
             {/* Chart Section */}
             {analytics && renderChart()}
-
-            {/* Mood Distribution */}
-            <View style={styles.moodContainer}>
-              <Text style={styles.sectionTitle}>Mood Distribution</Text>
-              {Object.entries(analytics?.mood_analysis?.distribution || {}).map(([mood, percentage]) => (
-                <View key={mood} style={styles.moodRow}>
-                  <Text style={styles.moodLabel}>{mood}</Text>
-                  <View style={styles.moodBarContainer}>
-                    <View 
-                      style={[
-                        styles.moodBar,
-                        { width: `${percentage}%` }
-                      ]} 
-                    />
-                    <Text style={styles.moodPercentage}>{percentage}%</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
+            
           </View>
         </ScrollView>
       )}
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        {navigationItems.map((item, index) => (
+          <TouchableOpacity 
+            key={index} 
+            style={styles.navItem}
+            onPress={item.onPress}
+          >
+            {item.icon({ 
+              color: item.route === 'Profile' ? "#007AFF" : "#666666", 
+              size: 24 
+            })}
+            <Text style={[
+              styles.navLabel,
+              item.route === 'Profile' && styles.navLabelActive
+            ]}>{item.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </SafeAreaView>
   );
 };
@@ -487,7 +549,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  }
+  },
+  bottomNav: {
+    position: 'absolute',
+    bottom: 6,
+    left: 0,
+    right: 0,
+    backgroundColor: '#8ec6e6',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+  },
+  navItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navLabel: {
+    fontSize: 12,
+    color: '#666666',
+    marginTop: 4,
+  },
+  navLabelActive: {
+    color: '#007AFF',
+    fontWeight: 'bold',
+  },
 });
 
 export default JournalAnalyticsScreen;

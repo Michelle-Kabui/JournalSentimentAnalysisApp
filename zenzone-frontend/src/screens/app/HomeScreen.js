@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     margin: 10,
-    marginBottom: 80, // Add space for bottom navigation
+    marginBottom: 80, 
   },
   cardTitle: {
     fontSize: 18,

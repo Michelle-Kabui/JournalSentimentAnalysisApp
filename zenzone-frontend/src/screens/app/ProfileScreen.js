@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#8ec6e6',
   },
   header: {
-    backgroundColor: '#8ec6e6', // Match AssessmentScreen header color
+    backgroundColor: '#8ec6e6',
     borderRadius: 15,
     paddingVertical: 20,
     paddingHorizontal: 20,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     borderColor: '#b0d9ec',
   },
   headerTitle: {
-    fontSize: 28, // Larger title
+    fontSize: 28, 
     fontWeight: 'bold',
     color: '#000000',
   },
@@ -243,12 +243,12 @@ const styles = StyleSheet.create({
   },
   userInfoContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20, // Softer corners
-    paddingVertical: 30, // Increased padding for vertical alignment
+    borderRadius: 20, 
+    paddingVertical: 30, 
     paddingHorizontal: 20,
     marginBottom: 20,
-    alignItems: 'center', // Center-align content
-    elevation: 3, // Slight shadow for elevation
+    alignItems: 'center', 
+    elevation: 3, 
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -258,14 +258,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userName: {
-    fontSize: 26, // Increased font size
+    fontSize: 26, 
     fontWeight: 'bold',
-    color: '#333333', // Slightly darker color for contrast
-    marginBottom: 8, // Added space between name and email
+    color: '#333333', 
+    marginBottom: 8, 
   },
   userEmail: {
-    fontSize: 18, // Slightly larger font size
-    color: '#555555', // Softer gray for contrast
+    fontSize: 18, 
+    color: '#555555', 
   },
   analyticsContainer: {
     marginBottom: 20,

@@ -79,9 +79,8 @@ const BSDSScreen = ({ navigation, route }) => {
           });
       }
 
-      // Now navigate to Results with BOTH scores
       navigation.navigate('Results', {
-          mdqResults: route.params?.mdqResults, // Get MDQ results from route params
+          mdqResults: route.params?.mdqResults, 
           bsdsResults: bsdsScore
       });
   } catch (error) {
