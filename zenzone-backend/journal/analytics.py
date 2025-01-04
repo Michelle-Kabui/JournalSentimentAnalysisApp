@@ -32,7 +32,7 @@ def get_sentiment_trends(user, timeframe='weekly'):
     if timeframe == 'daily':
         start_date = now - timedelta(days=1)
         trunc_function = TruncHour
-        date_format = '%H:00'
+        date_format = '%H:%M:%S%z'
     elif timeframe == 'weekly':
         start_date = now - timedelta(days=7)
         trunc_function = TruncDate
@@ -52,7 +52,12 @@ def get_sentiment_trends(user, timeframe='weekly'):
     
     trend_data = {}
     for entry in entries:
-        date_str = entry['date'].strftime(date_format)
+        if timeframe == 'daily':
+            # For daily view, use the full datetime with timezone
+            date_str = entry['date'].isoformat()
+        else:
+            date_str = entry['date'].strftime(date_format)
+            
         if date_str not in trend_data:
             trend_data[date_str] = {'positive': 0, 'neutral': 0, 'negative': 0}
         trend_data[date_str][entry['sentiment']] = entry['count']

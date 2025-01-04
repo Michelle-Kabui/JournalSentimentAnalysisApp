@@ -33,6 +33,7 @@ const JournalAnalyticsScreen = ({ navigation }) => {
         return;
       }
       const response = await API.getJournalAnalytics(token, timeframe);
+      console.log('Analytics response:', JSON.stringify(response, null, 2));  // Add this
       setAnalytics(response);
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -88,13 +89,12 @@ const JournalAnalyticsScreen = ({ navigation }) => {
     // Format labels based on timeframe
     const formattedLabels = labels.map(label => {
       if (timeframe === 'daily') {
-        // Add 5 hours to correct the time difference
         const date = new Date(label);
-        date.setHours(date.getHours() + 5);
-        const hour = date.getHours();
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const hour12 = hour % 12 || 12;
-        return `${hour12}:00 ${ampm}`;
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const hour12 = hours % 12 || 12;
+        return `${hour12}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
       } else if (timeframe === 'weekly') {
         const date = new Date(label);
         return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -106,7 +106,7 @@ const JournalAnalyticsScreen = ({ navigation }) => {
   
     return { 
       labels: formattedLabels,
-      datasets
+      datasets 
     };
   };
 
