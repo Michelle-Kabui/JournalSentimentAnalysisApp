@@ -33,7 +33,7 @@ const JournalAnalyticsScreen = ({ navigation }) => {
         return;
       }
       const response = await API.getJournalAnalytics(token, timeframe);
-      console.log('Analytics response:', JSON.stringify(response, null, 2));  // Add this
+      console.log('Analytics response:', JSON.stringify(response, null, 2));  
       setAnalytics(response);
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -42,100 +42,73 @@ const JournalAnalyticsScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
-
+ 
   const prepareChartData = () => {
     if (!analytics?.sentiment_trends || Object.keys(analytics.sentiment_trends).length === 0) {
       return {
-        labels: [],
+        labels: ['No data'],
         datasets: [
           {
-            data: [],
+            data: [0],
             color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-            label: 'Positive'
+            label: 'Positive',
           },
-          {
-            data: [],
-            color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`,
-            label: 'Neutral'
-          },
-          {
-            data: [],
-            color: (opacity = 1) => `rgba(244, 67, 54, ${opacity})`,
-            label: 'Negative'
-          }
-        ]
+        ],
       };
     }
   
-    const labels = Object.keys(analytics.sentiment_trends);
+    const labels = Object.keys(analytics.sentiment_trends).sort();
     const datasets = [
       {
-        data: labels.map(label => analytics.sentiment_trends[label].positive || 0),
+        data: labels.map(label => analytics.sentiment_trends[label]?.positive || 0),
         color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-        label: 'Positive'
+        label: 'Positive',
       },
       {
-        data: labels.map(label => analytics.sentiment_trends[label].neutral || 0),
+        data: labels.map(label => analytics.sentiment_trends[label]?.neutral || 0),
         color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`,
-        label: 'Neutral'
+        label: 'Neutral',
       },
       {
-        data: labels.map(label => analytics.sentiment_trends[label].negative || 0),
+        data: labels.map(label => analytics.sentiment_trends[label]?.negative || 0),
         color: (opacity = 1) => `rgba(244, 67, 54, ${opacity})`,
-        label: 'Negative'
-      }
+        label: 'Negative',
+      },
     ];
   
-    // Format labels based on timeframe
-    const formattedLabels = labels.map(label => {
-      if (timeframe === 'daily') {
-        const date = new Date(label);
-        const hours = date.getHours();
-        const minutes = date.getMinutes();
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        const hour12 = hours % 12 || 12;
-        return `${hour12}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
-      } else if (timeframe === 'weekly') {
-        const date = new Date(label);
-        return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-      } else {
-        const date = new Date(label);
-        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-      }
-    });
+    const allValues = datasets.flatMap(dataset => dataset.data);
+    const maxValue = Math.max(...allValues, 0); 
   
-    return { 
-      labels: formattedLabels,
-      datasets 
+    return {
+      labels,
+      datasets,
+      maxValue, 
     };
   };
-
-  const renderChart = () => {
-    const chartData = prepareChartData();
-    const maxValue = Math.max(
-      ...chartData.datasets.flatMap(dataset => dataset.data)
-    );
   
-    const chartConfig = {
-      backgroundColor: '#ffffff',
-      backgroundGradientFrom: '#ffffff',
-      backgroundGradientTo: '#ffffff',
-      decimalPlaces: 0,
-      color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-      labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-      style: {
-        borderRadius: 16
-      },
-      propsForDots: {
-        r: "6",
-        strokeWidth: "2"
-      },
-      // Ensure even distribution of y-axis values
-      yAxisInterval: 1,
-      formatYLabel: (value) => Math.floor(value),
-      // Only show integers on y-axis
-      count: Math.ceil(maxValue) + 1
-    };
+  
+  // Update the renderChart function to include error handling
+  const renderChart = () => {
+    try {
+      const chartData = prepareChartData();
+      const allValues = chartData.datasets.flatMap((dataset) => dataset.data);
+      const maxValue = Math.max(...allValues, 0); // Calculate maxValue
+  
+      const chartConfig = {
+        backgroundColor: '#ffffff',
+        backgroundGradientFrom: '#ffffff',
+        backgroundGradientTo: '#ffffff',
+        decimalPlaces: 0,
+        color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+        labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+        style: {
+          borderRadius: 16,
+        },
+        propsForDots: {
+          r: "6",
+          strokeWidth: "2",
+        },
+      };
   
     return (
       <View style={styles.chartContainer}>
@@ -152,7 +125,6 @@ const JournalAnalyticsScreen = ({ navigation }) => {
             segments={Math.ceil(maxValue)}
             yAxisMinValue={0}
             yAxisMaxValue={Math.ceil(maxValue)}
-            // Add these new props to ensure proper y-axis display
             withInnerLines={true}
             withOuterLines={true}
             withVerticalLines={false}
@@ -208,7 +180,17 @@ const JournalAnalyticsScreen = ({ navigation }) => {
         </View>
       </View>
     );
-  };
+
+  } catch (error) {
+    console.error('Error rendering chart:', error);
+    return (
+      <View style={styles.chartContainer}>
+        <Text style={styles.chartTitle}>Sentiment Trends</Text>
+        <Text style={styles.errorText}>Unable to display chart at this time</Text>
+      </View>
+    );
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
