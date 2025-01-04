@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { API } from '../../services/api';
 import { TokenStorage } from '../../utils/tokenStorage';
 
@@ -46,6 +46,33 @@ const ZenChatScreen = ({ navigation }) => {
       showDisclaimer();
     }
   }, []);
+
+  const navigationItems = [
+    { 
+      icon: ({color, size}) => <Feather name="home" size={size} color={color} />,
+      label: 'Home',
+      route: 'Home',
+      onPress: () => navigation.navigate('Home')
+    },
+    { 
+      icon: ({color, size}) => <Feather name="edit" size={size} color={color} />,
+      label: 'Journal',
+      route: 'Journal',
+      onPress: () => navigation.navigate('Journal')
+    },
+    { 
+      icon: ({color, size}) => <MaterialCommunityIcons name="book-open-variant" size={size} color={color} />,
+      label: 'Assessment',
+      route: 'Assessment',
+      onPress: () => navigation.navigate('Assessment')
+    },
+    { 
+      icon: ({color, size}) => <Feather name="user" size={size} color={color} />,
+      label: 'Profile',
+      route: 'Profile',
+      onPress: () => navigation.navigate('Profile')
+    }
+  ];
 
   const sendMessage = async () => {
     if (!inputText.trim()) return;
@@ -174,7 +201,27 @@ const ZenChatScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
         </View>
+        
       </KeyboardAvoidingView>
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        {navigationItems.map((item, index) => (
+          <TouchableOpacity 
+            key={index} 
+            style={styles.navItem}
+            onPress={item.onPress}
+          >
+            {item.icon({ 
+              color: item.route === 'Profile' ? "#007AFF" : "#666666", 
+              size: 24 
+            })}
+            <Text style={[
+              styles.navLabel,
+              item.route === 'Profile' && styles.navLabelActive
+            ]}>{item.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </SafeAreaView>
   );
 };
@@ -185,15 +232,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#8ec6e6',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
     backgroundColor: '#8ec6e6',
-    borderBottomWidth: 1,
-    borderBottomColor: '#b0d9ec',
+    borderRadius: 15,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    marginTop: 40,
+    marginBottom: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    borderWidth: 1,
+    borderColor: '#b0d9ec',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   backButton: {
     flexDirection: 'row',
@@ -267,6 +320,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E5E5',
+    marginBottom: 0,
   },
   input: {
     flex: 1,
@@ -277,6 +331,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     fontSize: 16,
     maxHeight: 100,
+  
   },
   sendButton: {
     width: 44,
@@ -285,6 +340,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  bottomNav: {
+    position: 'absolute',
+    bottom: 6,
+    left: 0,
+    right: 0,
+    backgroundColor: '#8ec6e6',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+  },
+  navItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navLabel: {
+    fontSize: 12,
+    color: '#666666',
+    marginTop: 4,
+  },
+  navLabelActive: {
+    color: '#007AFF',
+    fontWeight: 'bold',
   },
 });
 
