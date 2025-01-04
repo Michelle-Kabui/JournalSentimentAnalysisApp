@@ -1,4 +1,3 @@
-import { API } from '../../services/api';
 import React, { useState } from 'react';
 import { 
   View, 
@@ -7,12 +6,15 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   Image,
-  KeyboardAvoidingView,  // Add this import
-  Platform,
+  KeyboardAvoidingView,
   ScrollView,
-  Alert } from 'react-native';
+  Platform,
+  Alert,
+  Keyboard
+} from 'react-native';
+import { API } from '../../services/api';
 import { TokenStorage } from '../../utils/tokenStorage';
-import { AntDesign } from '@expo/vector-icons';
+import { TouchableWithoutFeedback } from 'react-native'; 
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -24,91 +26,80 @@ export default function LoginScreen({ navigation }) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-  
+
     try {
-      console.log('Attempting login...');
       const response = await API.login({
         email: email.trim(),
         password: password
       });
       
       if (response.tokens) {
-        console.log('Got tokens:', response.tokens); // Add this to debug
         await TokenStorage.storeTokens(response.tokens);
-        const savedToken = await TokenStorage.getAccessToken(); // Verify token was saved
-        console.log('Verified saved token:', savedToken); // Add this to debug
         navigation.replace('Home');
       } else {
         Alert.alert('Error', 'Invalid email or password');
       }
     } catch (error) {
       console.error('Login failed:', error);
-      Alert.alert(
-        'Login Failed', 
-        'Please check your email and password and try again'
-      );
+      Alert.alert('Login Failed', 'Please check your email and password and try again');
     }
-};
-  
+  };
 
   return (
-    <View style={styles.container}>  
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../../assets/images/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../../assets/images/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
 
-        <View style={styles.formContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholderTextColor="#87CEEB"
-          />
+          <View style={styles.formContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              placeholderTextColor="#87CEEB"
+            />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#87CEEB"
-          />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholderTextColor="#87CEEB"
+            />
 
-          <TouchableOpacity 
-            style={styles.loginButton}
-            onPress={handleLogin}
-            disabled={loading}
-           >
-          <Text style={styles.loginButtonText}>
-           {loading ? 'Logging in...' : 'Login'}
-          </Text>
-          </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.loginButton}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              <Text style={styles.loginButtonText}>
+                {loading ? 'Logging in...' : 'Login'}
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.registerButton}
-            onPress={() => navigation.navigate('Register')}
-          >
-            <Text style={styles.registerButtonText}>Register</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('ForgotPassword')}
-          >
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
-         
-        </View>
-      </ScrollView>
-    </View>
+            <TouchableOpacity 
+              style={styles.registerButton}
+              onPress={() => navigation.navigate('Register')}
+            >
+              <Text style={styles.registerButtonText}>Register</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -130,11 +121,6 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     marginBottom: 10,
-  },
-  logoText: {
-    fontSize: 24,
-    color: '#000000',
-    fontWeight: '400',
   },
   formContainer: {
     width: '100%',
@@ -175,11 +161,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  forgotPasswordText: {
-    color: '#007AFF',
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  
 });

@@ -10,10 +10,10 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { Feather } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { API } from '../../services/api';
 import { TokenStorage } from '../../utils/tokenStorage';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 
 // Configure notifications for iOS
 Notifications.setNotificationHandler({
@@ -130,7 +130,32 @@ const RemindersScreen = ({ navigation }) => {
       </View>
     );
   }
-
+  const navigationItems = [
+    { 
+      icon: ({color, size}) => <Feather name="home" size={size} color={color} />,
+      label: 'Home',
+      route: 'Home',
+      onPress: () => navigation.navigate('Home')
+    },
+    { 
+      icon: ({color, size}) => <Feather name="edit" size={size} color={color} />,
+      label: 'Journal',
+      route: 'Journal',
+      onPress: () => navigation.navigate('Journal')
+    },
+    { 
+      icon: ({color, size}) => <MaterialCommunityIcons name="book-open-variant" size={size} color={color} />,
+      label: 'Assessment',
+      route: 'Assessment',
+      onPress: () => navigation.navigate('Assessment')
+    },
+    { 
+      icon: ({color, size}) => <Feather name="user" size={size} color={color} />,
+      label: 'Profile',
+      route: 'Profile',
+      onPress: () => navigation.navigate('Profile')
+    }
+  ];
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -245,6 +270,26 @@ const RemindersScreen = ({ navigation }) => {
           )}
         </View>
       </ScrollView>
+      <View style={styles.bottomNav}>
+        {navigationItems.map((item, index) => (
+          <TouchableOpacity 
+            key={index} 
+            style={styles.navItem}
+            onPress={item.onPress}
+          >
+            {item.icon({ 
+              color: item.route === 'Journal' ? "#007AFF" : "#666666", 
+              size: 24 
+            })}
+            <Text style={[
+              styles.navLabel,
+              item.route === 'Journal' && styles.navLabelActive
+            ]}>
+              {item.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 };
@@ -254,11 +299,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#8ec6e6',
   },
   header: {
-    backgroundColor: '#8ec6e6',
+    backgroundColor: '#8ec6e6', 
     borderRadius: 15,
     paddingVertical: 20,
     paddingHorizontal: 20,
-    marginTop: 40,
+    marginTop: 60,
     marginBottom: 20,
     alignItems: 'center',
     shadowColor: '#000',
@@ -267,13 +312,14 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     borderWidth: 1,
     borderColor: '#b0d9ec',
-    flexDirection: 'row',
+    flexDirection: 'row', 
     justifyContent: 'space-between',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#000000',
+    textAlign: 'center',
   },
   backButton: {
     flexDirection: 'row',
@@ -408,6 +454,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#8ec6e6',
-  }
+  },
+  bottomNav: {
+    position: 'absolute',
+    bottom: 6,
+    left: 0,
+    right: 0,
+    backgroundColor: '#8ec6e6',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+  },
+  navItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navLabel: {
+    fontSize: 12,
+    color: '#666666',
+    marginTop: 4,
+  },
+  navLabelActive: {
+    color: '#007AFF',
+    fontWeight: 'bold',
+  },
 });
 export default RemindersScreen;

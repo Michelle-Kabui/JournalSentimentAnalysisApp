@@ -149,7 +149,7 @@ const JournalScreen = ({ route, navigation }) => {
     style={styles.journalInput}
     multiline
     placeholder="Write about your day..."
-    value={journalEntry}  // This will show the existing content when editing
+    value={journalEntry}  
     onChangeText={setJournalEntry}
     placeholderTextColor="#666666"
     textAlignVertical="top"
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   headerContainer: {
-    backgroundColor: '#8ec6e6', // Match AssessmentScreen header color
+    backgroundColor: '#8ec6e6',
     borderRadius: 15,
     paddingVertical: 20,
     paddingHorizontal: 20,
@@ -224,8 +224,8 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     borderWidth: 1,
     borderColor: '#b0d9ec',
-    flexDirection: 'row', // Row layout for title and date
-    justifyContent: 'space-between', // Space out elements
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
   },
   headerTitle: {
     fontSize: 24,

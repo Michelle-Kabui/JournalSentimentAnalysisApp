@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#8ec6e6',
   },
   headerContainer: {
-    backgroundColor: '#8ec6e6', // Match AssessmentScreen header color
+    backgroundColor: '#8ec6e6', 
     borderRadius: 15,
     paddingVertical: 20,
     paddingHorizontal: 20,
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     borderWidth: 1,
     borderColor: '#b0d9ec',
-    flexDirection: 'row', // Row layout for title and date
+    flexDirection: 'row', 
     justifyContent: 'space-between',
   },
   headerTitle: {
