@@ -173,7 +173,7 @@ const HomeScreen = ({ navigation }) => {
 
         <TouchableOpacity style={styles.zenChatCard}>
           <Text style={styles.cardTitle}>ZenChat</Text>
-          <Text style={styles.cardSubtitle}>Want to talk to someone? ZenChat is waiting to hear from you!</Text>
+          <Text style={styles.cardSubtitle}>Want to chat? ZenChat is waiting to hear from you!</Text>
         </TouchableOpacity>
 
         <View style={styles.quoteCard}>
