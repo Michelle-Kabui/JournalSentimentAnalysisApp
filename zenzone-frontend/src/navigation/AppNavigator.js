@@ -19,6 +19,7 @@ import AssessmentHistoryScreen from '../screens/app/AssessmentHistoryScreen';
 import JournalAnalyticsScreen from '../screens/app/JournalAnalyticsScreen';
 import EditProfileScreen from '../screens/app/EditProfileScreen';
 import RemindersScreen from '../screens/app/RemindersScreen';
+import ZenChatScreen from '../screens/app/ZenChatScreen'; 
 
 // In Stack.Navigator
 const Stack = createNativeStackNavigator();
@@ -71,6 +72,11 @@ export default function AppNavigator() {
   component={RemindersScreen}
   options={{ headerShown: false }}
 />
+<Stack.Screen   
+          name="ZenChat" 
+          component={ZenChatScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>      
     </NavigationContainer>
   );

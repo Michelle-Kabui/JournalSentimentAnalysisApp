@@ -159,21 +159,31 @@ const HomeScreen = ({ navigation }) => {
           </ScrollView>
         </View>
 
-        <View style={styles.rowContainer}>
-          <TouchableOpacity style={styles.card}>
-            <Text style={styles.cardTitle}>Daily Log</Text>
-            <Text style={styles.cardSubtitle}>Keep record of how you are feeling?</Text>
-          </TouchableOpacity>
+       
+      <View style={styles.rowContainer}>
+        <TouchableOpacity 
+          style={styles.card}
+          onPress={() => navigation.navigate('Journal')}
+        >
+          <Text style={styles.cardTitle}>Daily Log</Text>
+          <Text style={styles.cardSubtitle}>Keep record of how you are feeling?</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity style={styles.card}>
-            <Text style={styles.cardTitle}>Check-in</Text>
-            <Text style={styles.cardSubtitle}>Check your mental health status.</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity 
+          style={styles.card}
+          onPress={() => navigation.navigate('Assessment')}
+        >
+          <Text style={styles.cardTitle}>Check-in</Text>
+          <Text style={styles.cardSubtitle}>Check your mental health status.</Text>
+        </TouchableOpacity>
+      </View>
 
-        <TouchableOpacity style={styles.zenChatCard}>
+        <TouchableOpacity 
+          style={styles.zenChatCard}
+          onPress={() => navigation.navigate('ZenChat')}
+        >
           <Text style={styles.cardTitle}>ZenChat</Text>
-          <Text style={styles.cardSubtitle}>Want to chat? ZenChat is waiting to hear from you!</Text>
+          <Text style={styles.cardSubtitle}>Want to talk to someone? ZenChat is waiting to hear from you!</Text>
         </TouchableOpacity>
 
         <View style={styles.quoteCard}>

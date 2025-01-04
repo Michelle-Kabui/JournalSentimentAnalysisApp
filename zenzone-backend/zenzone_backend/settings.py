@@ -12,10 +12,17 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import secrets
 print (secrets.token_urlsafe(50))
 
-SECRET_KEY = 'K7HZW0z1_UthCIqCtjJF2EoSPKLBXrl-3qzo87fuBmWjw3lS7Y90TUO-R53K4_Z8qK8'
 
+
+SECRET_KEY = 'K7HZW0z1_UthCIqCtjJF2EoSPKLBXrl-3qzo87fuBmWjw3lS7Y90TUO-R53K4_Z8qK8'
+import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv() 
+
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -70,6 +77,7 @@ INSTALLED_APPS = [
     'journal_sentiment',
     'assessments',
     'reminders',
+    'zenchat',
 
 
 ]

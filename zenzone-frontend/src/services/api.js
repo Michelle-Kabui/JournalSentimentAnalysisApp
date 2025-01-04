@@ -2,6 +2,7 @@ const BASE_URL = 'http://192.168.1.102:8000/api';
 
 export const API = {
 
+    
     // User Profile
     getUserProfile: async (token) => {
         try {
@@ -56,6 +57,37 @@ export const API = {
             return data;
         } catch (error) {
             console.error('Error updating user profile:', error);
+            throw error;
+        }
+    },
+
+    sendChatMessage: async (token, message) => {
+        try {
+            console.log('Attempting to send chat message:', { message });
+            console.log('Using token:', token ? 'Token exists' : 'No token');
+            
+            const response = await fetch(`${BASE_URL}/zenchat/chat/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message })
+            });
+            
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorData = await response.text();
+                console.error('Error response:', errorData);
+                throw new Error(`Server responded with ${response.status}: ${errorData}`);
+            }
+            
+            const data = await response.json();
+            console.log('Response data:', data);
+            return data;
+        } catch (error) {
+            console.error('Detailed chat error:', error);
             throw error;
         }
     },

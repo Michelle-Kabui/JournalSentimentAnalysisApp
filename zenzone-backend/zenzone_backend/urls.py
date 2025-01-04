@@ -7,5 +7,5 @@ urlpatterns = [
     path('api/journal/', include('journal.urls')),
     path('api/assessments/', include('assessments.urls')),
     path('api/reminders/', include('reminders.urls')),
-
+    path('api/zenchat/', include('zenchat.urls')),
 ]
