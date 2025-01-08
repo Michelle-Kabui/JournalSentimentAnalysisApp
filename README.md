@@ -11,9 +11,6 @@ ZenZone is a comprehensive mental health journaling and assessment mobile applic
 - Historical view of all entries
 - Rich text editing capabilities
 
-### 📊 Mood Tracking
-- Daily mood logging
-  
 
 ### 🔍 Mental Health Assessments
 - Mood Disorder Questionnaire (MDQ)
@@ -35,7 +32,8 @@ ZenZone is a comprehensive mental health journaling and assessment mobile applic
 - Node.js (v14 or later)
 - Python (v3.8 or later)
 - PostgreSQL
-- React Native development environment
+- Expo CLI (`npm install -g expo-cli`)
+- Expo Go app on your mobile device
 - Django development environment
 
 ### Installation
@@ -44,7 +42,7 @@ ZenZone is a comprehensive mental health journaling and assessment mobile applic
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/zenzone.git
+   git clone https://github.com/Michelle-Kabui/JournalSentimentAnalysisApp.git
    cd zenzone/backend
    ```
 
@@ -87,7 +85,7 @@ ZenZone is a comprehensive mental health journaling and assessment mobile applic
 
 7. Start the Django server:
    ```bash
-   python manage.py runserver
+   python manage.py runserver 0.0.0.0:8000
    ```
 
 #### Frontend Setup
@@ -115,6 +113,28 @@ ZenZone is a comprehensive mental health journaling and assessment mobile applic
 
 ### Running the App
 
+#### Using Expo Go (Recommended for Development)
+
+1. Start the Expo development server:
+   ```bash
+   npx expo start
+   ```
+
+2. Run on device:
+   - Install Expo Go app on your mobile device from App Store (iOS) or Play Store (Android)
+   - Scan the QR code shown in the terminal with:
+     - iOS: Use the device camera app
+     - Android: Use the Expo Go app's QR scanner
+
+3. Development Options:
+   - Press 'a' in the terminal to open on Android emulator
+   - Press 'i' to open on iOS simulator
+   - Press 'w' to open in web browser
+   - Press 'r' to reload the app
+   - Press 'm' to toggle the menu
+   
+#### Using React Native CLI (For Production)
+
 1. Start the Metro bundler:
    ```bash
    npx react-native start
@@ -128,6 +148,23 @@ ZenZone is a comprehensive mental health journaling and assessment mobile applic
    Or iOS:
    ```bash
    npx react-native run-ios
+   ```
+
+#### Expo Build Commands
+
+1. Build for Android:
+   ```bash
+   expo build:android
+   ```
+
+2. Build for iOS:
+   ```bash
+   expo build:ios
+   ```
+
+3. Generate APK for testing:
+   ```bash
+   expo build:android -t apk
    ```
 
 ## Architecture
@@ -168,27 +205,9 @@ ZenZone is a comprehensive mental health journaling and assessment mobile applic
 - GET `/api/journal/entries/analytics/` - Journal analytics
 - GET `/api/journal/entries/mood-analysis/` - Mood analysis
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
-## Acknowledgments
 
-- MDQ and BSDS assessment tools
-- React Native community
-- Django community
-- All contributors and supporters
-
-## Contact
-
-Your Name - [@yourusername](https://twitter.com/yourusername)
-
-Project Link: [https://github.com/yourusername/zenzone](https://github.com/yourusername/zenzone)
