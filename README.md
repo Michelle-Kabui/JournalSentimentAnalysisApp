@@ -206,8 +206,4 @@ ZenZone is a comprehensive mental health journaling and assessment mobile applic
 - GET `/api/journal/entries/mood-analysis/` - Mood analysis
 
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
 
